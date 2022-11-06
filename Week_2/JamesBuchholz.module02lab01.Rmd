@@ -1,0 +1,144 @@
+---
+title: "Week 2 Exercises"
+author: "James Buchholz"
+date: "November 6, 2022"
+output: pdf_document
+---
+
+Please complete all exercises below. You may use stringr, lubridate, or the forcats library. 
+
+Place this at the top of your script:
+library(stringr)
+library(lubridate)
+library(forcats)
+
+# Exercise 1
+Read the sales_pipe.txt file into an R data frame as sales. 
+
+```{r}
+library(stringr)
+library(lubridate)
+library(forcats)
+
+
+sales_pipe <- "~/GitHub/DSE5002/Week_2/Data/sales_pipe.txt"
+
+sales <- read.table(sales_pipe,
+                    header = T,
+                    fill = T,
+                    sep = "|",
+                    fileEncoding = 'WINDOWS-1252')
+
+```
+
+# Exercise 2
+You can extract a vector of columns names from a data frame using the colnames() function. Notice the first column has some odd characters. Change the column name for the FIRST column in the sales date frame to Row.ID. 
+
+**Note: You will need to assign the first element of colnames to a single character.**
+
+```{r}
+colnames(sales)[1] <- "Row.ID"
+```
+
+# Exercise 3
+Convert both Ship.Date and Order.Date to date vectors within the sales data frame. What is the number of days between the most recent order and the oldest order?
+How many years is that?
+How many weeks?
+
+**Note: Use lubridate**
+
+```{r}
+install.packages('lubridate')
+library(lubridate)
+
+sales$Ship.Date <- mdy(sales$Ship.Date)
+inherits(sales$Ship.Date, c("Date"))
+
+sales$Order.Date <- as.Date(sales$Order.Date, format = "%m/%d/%Y")
+inherits(sales$Order.Date, c("Date"))
+
+min_date <- min(sales$Order.Date)
+max_date <- max(sales$Order.Date)
+
+difftime(max_date, min_date, units = 'days')
+
+year_diff <- time_length(difftime(max_date, min_date), 'years')
+year_diff
+
+difftime(max_date, min_date, units = 'weeks')
+
+```
+
+
+# Exercise 4
+What is the average number of days it takes to ship an order?
+
+```{r}
+list_of_days <- as.integer(format(as.Date(sales$Ship.Date), "%d"))
+mean(list_of_days)
+```
+
+
+# Exercise 5
+How many customers have the first name Bill?
+You will need to split the customer name into first and last name segments and then use a regular expression to match the first name bill. Use the length() function to determine the number of customers with the first name Bill in the sales data. 
+
+```{r}
+
+name_split <- stringr::str_split(string = sales$Customer.Name, pattern = " ", n = Inf, simplify = T)
+bill_list <- name_split[name_split %in% "Bill"]
+length(bill_list)
+```
+
+# Exercise 6
+How many mentions of the word 'table' are there in the Product.Name column? 
+**Note you can do this in one line of code**
+
+```{r}
+length(grep("table", sales$Product.Name))
+```
+
+# Exercise 7
+Create a table of counts for each state in the sales data. The counts table should be ordered alphabetically from A to Z. 
+
+```{r}
+state_table <- table(sales$State)
+state_table
+```
+
+# Exercise 8
+Create an alphabetically ordered barplot for each sales Category in the State of Texas. 
+
+```{r}
+category_table <- table(sales$Category, sales$State)
+category_table
+cat_nums <- c(80, 225, 81)
+cat_name <- c("Furniture", "Office Supplies", "Technology")
+cat_table_texas <- data.frame(cat_name, cat_nums)
+cat_table_texas
+barplot(cat_nums,
+        main = "Each sales Category in the State of Texas",
+        xlab = "Category",
+        ylab = "Number of instances",
+        names.arg = cat_name)
+```
+
+# Exercise 9
+Find the average profit by region.
+**Note: You will need to use the aggregate() function to do this. To understand how the function works type ?aggregate in the console.**
+
+```{r}
+avg_prof_by_reg <- aggregate(Profit ~ Region, data = sales, mean)
+avg_prof_by_reg
+```
+
+# Exercise 10
+Find the average profit by order year. 
+**Note: You will need to use the aggregate() function to do this. To understand how the function works type ?aggregate in the console.**
+
+```{r}
+order_year <- format(as.Date(sales$Order.Date, format = "%m/%d/%Y"), "%Y")
+avg_prof_by_year <- aggregate(Profit ~ order_year, data = sales, mean)
+avg_prof_by_year
+```
+
